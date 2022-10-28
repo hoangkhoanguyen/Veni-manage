@@ -52,25 +52,43 @@ import routes from "routes";
 import { useMaterialUIController, setMiniSidenav } from "context";
 
 // Images
-import brandWhite from "assets/images/logo-ct.png";
-import brandDark from "assets/images/logo-ct-dark.png";
+// import brandWhite from "assets/images/logo-ct.png";
+// import brandDark from "assets/images/logo-ct-dark.png";
+import logo from "assets/images/logo.png";
+import { useDispatch, useSelector } from "react-redux";
+import MDSnackbar from "components/MDSnackbar";
+import {
+  setOpenSuccessSnackbar,
+  setOpenInfoSnackbar,
+  setOpenErrorSnackbar,
+} from "redux/reducers/uiReducer";
+// import CustomTheme from "customTheme";
+// import MDButton from "components/MDButton";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
+
+  const distp = useDispatch();
   const {
     miniSidenav,
     direction,
     layout,
     // openConfigurator,
     sidenavColor,
-    transparentSidenav,
-    whiteSidenav,
+    // transparentSidenav,
+    // whiteSidenav,
     darkMode,
   } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   // const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
 
+  const isLogin = useSelector((state) => state.user.isLogin);
+  const isSuccess = useSelector((state) => state.ui.isSuccess);
+  const isError = useSelector((state) => state.ui.isError);
+  const isInfo = useSelector((state) => state.ui.isInfo);
+  const notiContent = useSelector((state) => state.ui.notiContent);
+  const notiTitle = useSelector((state) => state.ui.notiTitle);
   // Cache for the rtl
   // useMemo(() => {
   //   const cacheRtl = createCache({
@@ -111,6 +129,11 @@ export default function App() {
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
 
+  const closeNoti = () => {
+    distp(setOpenSuccessSnackbar(false));
+    distp(setOpenErrorSnackbar(false));
+    distp(setOpenInfoSnackbar(false));
+  };
   const getRoutes = (allRoutes) =>
     allRoutes.map((route) => {
       if (route.collapse) {
@@ -149,21 +172,61 @@ export default function App() {
   // );
 
   return (
+    // <CustomTheme>
     <ThemeProvider theme={darkMode ? themeDark : theme}>
       <CssBaseline />
-      <Sidenav
-        color={sidenavColor}
-        brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
-        brandName="Veni Manage"
-        routes={routes}
-        onMouseEnter={handleOnMouseEnter}
-        onMouseLeave={handleOnMouseLeave}
-      />
+      {isLogin && (
+        <Sidenav
+          color={sidenavColor}
+          brand={logo}
+          brandName="Veni Manage"
+          routes={routes}
+          onMouseEnter={handleOnMouseEnter}
+          onMouseLeave={handleOnMouseLeave}
+        />
+      )}
       {layout === "vr" && <Configurator />}
       <Routes>
         {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/dashboard" />} />
+        <Route
+          path="*"
+          element={<Navigate to={isLogin ? "/profile" : "/authentication/sign-in"} />}
+        />
       </Routes>
+      <MDSnackbar
+        color="success"
+        icon="check"
+        title={notiContent}
+        content={notiTitle}
+        // dateTime="11 mins ago"
+        open={isSuccess}
+        onClose={closeNoti}
+        close={closeNoti}
+        bgWhite
+      />
+      <MDSnackbar
+        color="info"
+        icon="notifications"
+        title={notiContent}
+        content={notiTitle}
+        // dateTime="11 mins ago"
+        open={isInfo}
+        onClose={closeNoti}
+        close={closeNoti}
+        bgWhite
+      />
+      <MDSnackbar
+        color="error"
+        icon="warning"
+        title={notiContent}
+        content={notiTitle}
+        // dateTime="11 mins ago"
+        open={isError}
+        onClose={closeNoti}
+        close={closeNoti}
+        bgWhite
+      />
     </ThemeProvider>
+    // </CustomTheme>
   );
 }

@@ -37,6 +37,8 @@ import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 // Overview page components
 import Header from "layouts/profile/components/Header";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 // import PlatformSettings from "layouts/profile/components/PlatformSettings";
 
 // Data
@@ -54,6 +56,13 @@ import { useSelector } from "react-redux";
 
 function Overview() {
   const userInfo = useSelector((state) => state.user.userInfo);
+  const isLogin = useSelector((state) => state.user.isLogin);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLogin) navigate("/authentication/sign-in");
+  }, [isLogin]);
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -70,12 +79,10 @@ function Overview() {
                 title="profile information"
                 // description="Hi, I’m Alec Thompson, Decisions: If you can’t decide, the answer is no. If two equally difficult paths, choose the one more painful in the short term (pain avoidance is creating an illusion of equality)."
                 info={{
-                  fullName: userInfo?.firstName
-                    ? `${userInfo.firstName} ${userInfo.lastName}`
-                    : "Richard Davis",
-                  mobile: userInfo?.phoneNumber || "(44) 123 1234 123",
-                  email: userInfo?.email || "alecthompson@mail.com",
-                  location: userInfo?.address || "USA",
+                  fullName: userInfo?.firstName ? `${userInfo.firstName} ${userInfo.lastName}` : "",
+                  mobile: userInfo?.phoneNumber,
+                  email: userInfo?.email,
+                  location: userInfo?.address,
                 }}
                 social={[
                   {

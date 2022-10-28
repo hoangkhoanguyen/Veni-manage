@@ -26,26 +26,78 @@ import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 
 // Authentication layout components
-import CoverLayout from "layouts/authentication/components/CoverLayout";
+// import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
 import { Stack } from "@mui/material";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import userService from "service/userService";
+import BasicLayout from "layouts/authentication/components/BasicLayout";
+import validateService from "service/validateService";
+import {
+  setOpenErrorSnackbar,
+  setNotiContent,
+  setNotiTitle,
+  setOpenSuccessSnackbar,
+} from "redux/reducers/uiReducer";
 
 function Cover() {
   const [userInfo, setUserInfo] = useState({});
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isLogin = useSelector((state) => state.user.isLogin);
+
+  useEffect(() => {
+    if (isLogin) {
+      navigate(-1);
+    }
+  }, [isLogin]);
   const handleChangeUserInfo = (key, value) => {
+    // if(key ==='')
     setUserInfo({ ...userInfo, [key]: value });
   };
-  const handleClickSignUp = (e) => {
+  const handleClickSignUp = async (e) => {
     e.preventDefault();
-    const data = { userInfo };
-    console.log(data);
+    const data = { ...userInfo };
+    if (!validateService.isNormalLetterAndNumber(userInfo.username)) {
+      dispatch(setNotiContent("Please check"));
+      dispatch(setNotiTitle("Username must be only normal characters or numbers!"));
+      dispatch(setOpenErrorSnackbar(true));
+      return;
+    }
+    if (
+      !validateService.isNormalName(userInfo.firstName) ||
+      !validateService.isNormalName(userInfo.lastName)
+    ) {
+      dispatch(setNotiContent("Please check"));
+      dispatch(setNotiTitle("First name and last name must not contain special characters!"));
+      dispatch(setOpenErrorSnackbar(true));
+      return;
+    }
+    if (userInfo.password !== userInfo.rePassword) {
+      dispatch(setNotiContent("Please check"));
+      dispatch(setNotiTitle("Your passwords do not match!"));
+      dispatch(setOpenErrorSnackbar(true));
+      return;
+    }
+    const response = await userService.signUp(data);
+    console.log(response);
+    if (response?.errCode === 0) {
+      dispatch(setNotiContent("Congratulations!"));
+      dispatch(setNotiTitle("Your account is created successfully!"));
+      dispatch(setOpenSuccessSnackbar(true));
+      setUserInfo({});
+    } else {
+      dispatch(setNotiContent("Error!"));
+      dispatch(setNotiTitle(response ? response.errMsg : "Something went wrong!"));
+      dispatch(setOpenErrorSnackbar(true));
+    }
   };
   return (
-    <CoverLayout image={bgImage}>
+    <BasicLayout image={bgImage}>
       <Card>
         <MDBox
           variant="gradient"
@@ -77,6 +129,7 @@ function Cover() {
                 onChange={(e) => {
                   handleChangeUserInfo("username", e.target.value);
                 }}
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -89,6 +142,7 @@ function Cover() {
                 onChange={(e) => {
                   handleChangeUserInfo("firstName", e.target.value);
                 }}
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -101,6 +155,7 @@ function Cover() {
                 onChange={(e) => {
                   handleChangeUserInfo("lastName", e.target.value);
                 }}
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -113,6 +168,7 @@ function Cover() {
                 onChange={(e) => {
                   handleChangeUserInfo("password", e.target.value);
                 }}
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -125,6 +181,7 @@ function Cover() {
                 onChange={(e) => {
                   handleChangeUserInfo("rePassword", e.target.value);
                 }}
+                required
               />
             </MDBox>
             {/* <MDBox display="flex" alignItems="center" ml={-1}>
@@ -149,8 +206,8 @@ function Cover() {
               </MDTypography>
             </MDBox> */}
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton variant="gradient" color="info" fullWidth type="submit">
+                sign up
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -171,7 +228,7 @@ function Cover() {
           </Stack>
         </MDBox>
       </Card>
-    </CoverLayout>
+    </BasicLayout>
   );
 }
 

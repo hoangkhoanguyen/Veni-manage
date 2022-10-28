@@ -22,6 +22,8 @@ import AddIcon from "@mui/icons-material/Add";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 
+import { styled } from "@mui/material/styles";
+
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
@@ -49,7 +51,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MDButton from "components/MDButton";
 import { ProductModalProvider } from "customeContext/ProductModalContext";
 import {
@@ -59,9 +61,35 @@ import {
   setOpenAddQuantityProductModal,
   setOpenDeleteProductModal,
 } from "context";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import validateService from "service/validateService";
+import {
+  setOpenErrorSnackbar,
+  setNotiTitle,
+  setNotiContent,
+  setNotiInfo,
+  setOpenSuccessSnackbar,
+} from "redux/reducers/uiReducer";
+import productService from "service/productService";
+import { setReloadProductFromStore } from "redux/reducers/productReducer";
+
+const CustomedButton = styled(Button)({
+  border: "1px solid",
+});
 
 function Tables() {
   const { columns, rows } = productsTableData();
+
+  const isLogin = useSelector((state) => state.user.isLogin);
+  const reloadProductFromStore = useSelector((state) => state.product.reloadProductFromStore);
+
+  const navigate = useNavigate();
+  const distp = useDispatch();
+
+  useEffect(() => {
+    if (!isLogin) navigate("/authentication/sign-in");
+  }, [isLogin]);
 
   const style = {
     position: "absolute",
@@ -95,7 +123,7 @@ function Tables() {
   } = controller;
   const [isOpenNewProductModal, setIsOpenNewProductModal] = useState(false);
   const [newProductInfo, setNewProductInfo] = useState(initNewProductInfo);
-  const [quan, setQuan] = useState(0);
+  const [quan, setQuan] = useState();
   // const { isOpenEditProductModal } = useContext(ProductModalContext);
 
   // add new product
@@ -113,16 +141,42 @@ function Tables() {
       [key]: value,
     });
   };
-  const handleSubmitNewProductForm = (e) => {
+  const handleSubmitNewProductForm = async (e) => {
     e.preventDefault();
-    const data = { newProductInfo };
-    console.log(data);
+    if (!validateService.isNormalName(newProductInfo.name)) {
+      distp(setNotiTitle("Name of product must not contain special characters!"));
+      distp(setNotiContent("Please check!"));
+      distp(setOpenErrorSnackbar(true));
+      return;
+    }
+    const data = { ...newProductInfo };
+    const result = await productService.addNewProduct(data);
+    console.log(result);
+    if (result?.errCode === 0) {
+      distp(
+        setNotiInfo({
+          notiContent: "Congratulations!",
+          notiTitle: result.errMsg,
+        })
+      );
+      distp(setOpenSuccessSnackbar(true));
+      distp(setReloadProductFromStore(!reloadProductFromStore));
+      handleCloseNewProductModal();
+    } else {
+      distp(
+        setNotiInfo({
+          notiContent: "Please check!",
+          notiTitle: result?.errMsg ? result.errMsg : "Something went wrong!",
+        })
+      );
+      distp(setOpenErrorSnackbar(true));
+    }
   };
 
   // edit product
   const handleChangeEditProductInfo = (key, value) => {
     setEditProductInfo(dispatch, {
-      ...newProductInfo,
+      ...editProductInfo,
       [key]: value,
     });
   };
@@ -130,35 +184,104 @@ function Tables() {
   const handleCloseEditProductModal = () => {
     setOpenEditProductModal(dispatch, false);
   };
-  const handleSubmitEditProductForm = (e) => {
+  const handleSubmitEditProductForm = async (e) => {
     e.preventDefault();
-    const data = { editProductInfo };
-    console.log(data);
+    if (!validateService.isNormalName(editProductInfo.name)) {
+      distp(
+        setNotiInfo({
+          notiContent: "Please check!",
+          notiTitle: "Name of product must not contain special characters!",
+        })
+      );
+      distp(setOpenErrorSnackbar(true));
+      return;
+    }
+    const data = { ...editProductInfo };
+    const response = await productService.updateProductInfo(data);
+    console.log(response);
+    if (response?.errCode === 0) {
+      distp(
+        setNotiInfo({
+          notiContent: "Congratulations!",
+          notiTitle: response.errMsg,
+        })
+      );
+      distp(setOpenSuccessSnackbar(true));
+      distp(setReloadProductFromStore(!reloadProductFromStore));
+      handleCloseEditProductModal();
+    } else {
+      distp(
+        setNotiInfo({
+          notiContent: "Please check!",
+          notiTitle: response?.errMsg ? response.errMsg : "Something went wrong!",
+        })
+      );
+      distp(setOpenErrorSnackbar(true));
+    }
   };
 
   // add quantity
   const handleCloseAddQuantityModal = () => {
     setOpenAddQuantityProductModal(dispatch, false);
-    setQuan(0);
+    setQuan();
   };
   const changeQuantity = (value) => {
     setQuan(value);
   };
-  const handleSubmitAddQuantityProductForm = (e) => {
+  const handleSubmitAddQuantityProductForm = async (e) => {
     e.preventDefault();
-    const data = { addQuantityProductId, quan };
-    console.log(data);
+    const data = { productId: addQuantityProductId, quantity: quan };
+    const response = await productService.addQuantityToInventory(data);
+    console.log(response);
+    if (response?.errCode === 0) {
+      distp(
+        setNotiInfo({
+          notiContent: "Congratulations!",
+          notiTitle: response.errMsg,
+        })
+      );
+      distp(setOpenSuccessSnackbar(true));
+      distp(setReloadProductFromStore(!reloadProductFromStore));
+      handleCloseAddQuantityModal();
+    } else {
+      distp(
+        setNotiInfo({
+          notiContent: "Please check!",
+          notiTitle: response?.errMsg ? response.errMsg : "Something went wrong!",
+        })
+      );
+      distp(setOpenErrorSnackbar(true));
+    }
   };
 
   // Delete Product
   const handleCloseDeleteProductModal = () => {
     setOpenDeleteProductModal(dispatch, false);
-    setQuan(0);
   };
-  const handleSubmitDeleteProductForm = (e) => {
+  const handleSubmitDeleteProductForm = async (e) => {
     e.preventDefault();
-    const data = { deleteProductId };
-    console.log(data);
+    const data = { id: deleteProductId };
+    const response = await productService.deleteProduct(data);
+    console.log(response);
+    if (response?.errCode === 0) {
+      distp(
+        setNotiInfo({
+          notiContent: "Congratulations!",
+          notiTitle: response.errMsg,
+        })
+      );
+      distp(setOpenSuccessSnackbar(true));
+      distp(setReloadProductFromStore(!reloadProductFromStore));
+      handleCloseDeleteProductModal();
+    } else {
+      distp(
+        setNotiInfo({
+          notiContent: "Please check!",
+          notiTitle: response?.errMsg ? response.errMsg : "Something went wrong!",
+        })
+      );
+      distp(setOpenErrorSnackbar(true));
+    }
   };
 
   return (
@@ -184,9 +307,9 @@ function Tables() {
                   </MDTypography>
                 </MDBox>
                 <MDBox pl={2} mt={2}>
-                  <Button onClick={handleOpenNewProductModal} startIcon={<AddIcon />}>
+                  <CustomedButton onClick={handleOpenNewProductModal} startIcon={<AddIcon />}>
                     Add new product
-                  </Button>
+                  </CustomedButton>
                   <Modal open={isOpenNewProductModal} onClose={handleCloseNewProductModal}>
                     <MDBox style={style}>
                       <Card>
@@ -206,6 +329,7 @@ function Tables() {
                                 onChange={(e) => {
                                   handleChangeNewProductInfo("name", e.target.value);
                                 }}
+                                required
                               />
                             </FormControl>
                             <FormControl sx={{ mb: 2 }}>
@@ -213,10 +337,12 @@ function Tables() {
                               <Input
                                 id="price-new-product"
                                 fullWidth
+                                type="number"
                                 value={newProductInfo.price}
                                 onChange={(e) => {
                                   handleChangeNewProductInfo("price", e.target.value);
                                 }}
+                                required
                               />
                             </FormControl>
                             <FormControl sx={{ mb: 2 }}>
@@ -228,6 +354,7 @@ function Tables() {
                                 onChange={(e) => {
                                   handleChangeNewProductInfo("type", e.target.value);
                                 }}
+                                required
                               >
                                 <FormControlLabel
                                   value="vegetable"
@@ -253,6 +380,7 @@ function Tables() {
                                 onChange={(e) => {
                                   handleChangeNewProductInfo("image", e.target.value);
                                 }}
+                                required
                               />
                             </FormControl>
                             <FormControl sx={{ mb: 2 }}>
@@ -335,17 +463,20 @@ function Tables() {
                               onChange={(e) => {
                                 handleChangeEditProductInfo("name", e.target.value);
                               }}
+                              required
                             />
                           </FormControl>
                           <FormControl sx={{ mb: 2 }}>
                             <InputLabel htmlFor="price-new-product">Price</InputLabel>
                             <Input
                               id="price-new-product"
+                              type="number"
                               fullWidth
                               value={editProductInfo.price}
                               onChange={(e) => {
                                 handleChangeEditProductInfo("price", e.target.value);
                               }}
+                              required
                             />
                           </FormControl>
                           <FormControl sx={{ mb: 2 }}>
@@ -357,6 +488,7 @@ function Tables() {
                               onChange={(e) => {
                                 handleChangeEditProductInfo("type", e.target.value);
                               }}
+                              required
                             >
                               <FormControlLabel
                                 value="vegetable"
@@ -382,6 +514,7 @@ function Tables() {
                               onChange={(e) => {
                                 handleChangeEditProductInfo("image", e.target.value);
                               }}
+                              required
                             />
                           </FormControl>
                           <FormControl sx={{ mb: 2 }}>
@@ -454,6 +587,7 @@ function Tables() {
                               onChange={(e) => {
                                 changeQuantity(e.target.value);
                               }}
+                              required
                             />
                           </FormControl>
 
@@ -505,7 +639,7 @@ function Tables() {
                             </MDButton>
                             <MDButton
                               variant="outlined"
-                              color="info"
+                              color="secondary"
                               startIcon={<HighlightOffIcon />}
                               onClick={handleCloseDeleteProductModal}
                             >

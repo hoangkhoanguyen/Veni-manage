@@ -18,51 +18,36 @@ Coded by www.creative-tim.com
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDAvatar from "components/MDAvatar";
-import MDBadge from "components/MDBadge";
+// import MDAvatar from "components/MDAvatar";
+// import MDBadge from "components/MDBadge";
 
-import AddIcon from "@mui/icons-material/Add";
-import BorderColorIcon from "@mui/icons-material/BorderColor";
-import DeleteIcon from "@mui/icons-material/Delete";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { IconButton, Stack, Tooltip } from "@mui/material";
-import {
-  setOpenEditProductModal,
-  setEditProductInfo,
-  useMaterialUIController,
-  setAddQuantityProductId,
-  setOpenAddQuantityProductModal,
-  setDeleteProductId,
-  setOpenDeleteProductModal,
-} from "context";
 import { useEffect, useState } from "react";
 import axios from "customizeAxios";
+import { useDispatch } from "react-redux";
+import { setSelectedOrder, setOpenOrderDetails } from "redux/reducers/orderReducer";
 
 export default function data() {
+  const dispatch = useDispatch();
   const [orderHistoryList, setOrderHistoryList] = useState([]);
   useEffect(() => {
-    const getProduct = async () => {
+    const getOrders = async () => {
       const result = await axios.get("/api/order/get");
       console.log(result);
-      if (result?.data?.errCode === 0) {
-        setOrderHistoryList(result.data.data);
+      if (result?.errCode === 0) {
+        setOrderHistoryList(result.data);
       }
     };
-    getProduct();
+    getOrders();
   }, []);
 
-  const dispatch = useMaterialUIController()[1];
-  const handleClickEditProduct = (product) => {
-    setOpenEditProductModal(dispatch, true);
-    setEditProductInfo(dispatch, product);
+  const handleShowMoreDetails = (order) => {
+    console.log(order);
+    dispatch(setSelectedOrder(order));
+    dispatch(setOpenOrderDetails(true));
   };
-  const handleClickAddQuantity = (productId) => {
-    setAddQuantityProductId(dispatch, productId);
-    setOpenAddQuantityProductModal(dispatch, true);
-  };
-  const handleClickDelete = (productId) => {
-    setDeleteProductId(dispatch, productId);
-    setOpenDeleteProductModal(dispatch, true);
-  };
+
   return {
     columns: [
       { Header: "Time", accessor: "createdAt", align: "center" },
@@ -70,62 +55,28 @@ export default function data() {
       { Header: "action", accessor: "action", align: "center" },
     ],
 
-    rows: orderHistoryList.map((product) => {
+    rows: orderHistoryList.map((order) => {
       const row = {
-        name: (
+        createdAt: (
           <MDTypography display="block" variant="button" fontWeight="medium">
-            {product.name}
+            {order.createdAt}
           </MDTypography>
         ),
-        image: <MDAvatar src={product.image} name={product.name} size="lg" />,
-        type: (
-          <MDBox ml={-1}>
-            <MDBadge badgeContent={product.type} variant="square" color="success" size="sm" />
-          </MDBox>
-        ),
-        price: (
+        totalPrice: (
           <MDTypography variant="caption" color="text" fontWeight="medium">
-            {`${product.price} $`}
-          </MDTypography>
-        ),
-        total: (
-          <MDTypography variant="caption" color="text" fontWeight="medium">
-            {product.total}
-          </MDTypography>
-        ),
-        booked: (
-          <MDTypography variant="caption" color="text" fontWeight="medium">
-            {product.booked}
+            {`${order.totalPrice} $`}
           </MDTypography>
         ),
         action: (
           <MDBox>
             <Stack direction="row">
-              <Tooltip title="Add Quantity">
+              <Tooltip title="See more">
                 <IconButton
                   onClick={() => {
-                    handleClickAddQuantity(product.id);
+                    handleShowMoreDetails(order);
                   }}
                 >
-                  <AddIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Edit">
-                <IconButton
-                  onClick={() => {
-                    handleClickEditProduct(product);
-                  }}
-                >
-                  <BorderColorIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton
-                  onClick={() => {
-                    handleClickDelete(product.id);
-                  }}
-                >
-                  <DeleteIcon />
+                  <MoreHorizIcon />
                 </IconButton>
               </Tooltip>
             </Stack>

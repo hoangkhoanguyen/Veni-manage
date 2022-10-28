@@ -35,20 +35,22 @@ import {
   setOpenDeleteProductModal,
 } from "context";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import productService from "service/productService";
+import { useSelector } from "react-redux";
 
 export default function data() {
   const [productList, setProductList] = useState([]);
+  const reloadProductFromStore = useSelector((state) => state.product.reloadProductFromStore);
   useEffect(() => {
     const getProduct = async () => {
-      const result = await axios.get("https://veni-shop-be.herokuapp.com/api/product/get");
+      const result = await productService.getAllProductsFromMyStore();
       console.log(result);
-      if (result?.data?.errCode === 0) {
-        setProductList(result.data.data);
+      if (result?.errCode === 0) {
+        setProductList(result.data);
       }
     };
     getProduct();
-  }, []);
+  }, [reloadProductFromStore]);
 
   const dispatch = useMaterialUIController()[1];
   const handleClickEditProduct = (product) => {

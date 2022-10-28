@@ -28,8 +28,8 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 // import Footer from "examples/Footer";
 import DataTable from "examples/Tables/DataTable";
 import DataSaverOnIcon from "@mui/icons-material/DataSaverOn";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import SystemUpdateAltIcon from "@mui/icons-material/SystemUpdateAlt";
+// import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+// import SystemUpdateAltIcon from "@mui/icons-material/SystemUpdateAlt";
 // Data
 import orderHistoryTableData from "layouts/orderhistory/data/orderHistoryTableData";
 import {
@@ -37,32 +37,44 @@ import {
   // Button,
   CardContent,
   CardHeader,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  Input,
-  InputLabel,
+  // FormControl,
+  // FormControlLabel,
+  // FormLabel,
+  // Input,
+  // InputLabel,
   Modal,
-  Radio,
-  RadioGroup,
+  // Radio,
+  // RadioGroup,
   Stack,
-  TextField,
+  // TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect } from "react";
 import MDButton from "components/MDButton";
 import { ProductModalProvider } from "customeContext/ProductModalContext";
-import {
-  useMaterialUIController,
-  setOpenEditProductModal,
-  setEditProductInfo,
-  setOpenAddQuantityProductModal,
-  setOpenDeleteProductModal,
-} from "context";
+// import {
+// useMaterialUIController,
+// setOpenEditProductModal,
+// setEditProductInfo,
+// setOpenAddQuantityProductModal,
+// setOpenDeleteProductModal,
+// } from "context";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { setOpenOrderDetails } from "redux/reducers/orderReducer";
 
 function Tables() {
+  const dispatch = useDispatch();
   const { columns, rows } = orderHistoryTableData();
+  const isLogin = useSelector((state) => state.user.isLogin);
+  const selectedOrder = useSelector((state) => state.order.selectedOrder);
+  const isOpenOrderDetails = useSelector((state) => state.order.isOpenOrderDetails);
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLogin) navigate("/authentication/sign-in");
+  }, [isLogin]);
   const style = {
     position: "absolute",
     top: "50%",
@@ -75,92 +87,9 @@ function Tables() {
     p: 4,
   };
 
-  const initNewProductInfo = {
-    name: "",
-    price: "",
-    type: "",
-    image: "",
-    summary: "",
-    detailsDescription: "",
+  const handleCloseOrderDetailsModal = () => {
+    dispatch(setOpenOrderDetails(false));
   };
-
-  const [controller, dispatch] = useMaterialUIController();
-  const {
-    isOpenEditProductModal,
-    editProductInfo,
-    addQuantityProductId,
-    isOpenAddQuantityModal,
-    isOpenDeleteProductModal,
-    deleteProductId,
-  } = controller;
-  const [isOpenNewProductModal, setIsOpenNewProductModal] = useState(false);
-  const [newProductInfo, setNewProductInfo] = useState(initNewProductInfo);
-  const [quan, setQuan] = useState(0);
-  // const { isOpenEditProductModal } = useContext(ProductModalContext);
-
-  // add new product
-  // const handleOpenNewProductModal = () => {
-  //   setIsOpenNewProductModal(true);
-  // };
-  const handleCloseNewProductModal = () => {
-    setIsOpenNewProductModal(false);
-    setNewProductInfo(initNewProductInfo);
-  };
-
-  const handleChangeNewProductInfo = (key, value) => {
-    setNewProductInfo({
-      ...newProductInfo,
-      [key]: value,
-    });
-  };
-  const handleSubmitNewProductForm = (e) => {
-    e.preventDefault();
-    const data = { newProductInfo };
-    console.log(data);
-  };
-
-  // edit product
-  const handleChangeEditProductInfo = (key, value) => {
-    setEditProductInfo(dispatch, {
-      ...newProductInfo,
-      [key]: value,
-    });
-  };
-
-  const handleCloseEditProductModal = () => {
-    setOpenEditProductModal(dispatch, false);
-  };
-  const handleSubmitEditProductForm = (e) => {
-    e.preventDefault();
-    const data = { editProductInfo };
-    console.log(data);
-  };
-
-  // add quantity
-  const handleCloseAddQuantityModal = () => {
-    setOpenAddQuantityProductModal(dispatch, false);
-    setQuan(0);
-  };
-  const changeQuantity = (value) => {
-    setQuan(value);
-  };
-  const handleSubmitAddQuantityProductForm = (e) => {
-    e.preventDefault();
-    const data = { addQuantityProductId, quan };
-    console.log(data);
-  };
-
-  // Delete Product
-  const handleCloseDeleteProductModal = () => {
-    setOpenDeleteProductModal(dispatch, false);
-    setQuan(0);
-  };
-  const handleSubmitDeleteProductForm = (e) => {
-    e.preventDefault();
-    const data = { deleteProductId };
-    console.log(data);
-  };
-
   return (
     <ProductModalProvider>
       <DashboardLayout>
@@ -183,129 +112,6 @@ function Tables() {
                     Your Orders History
                   </MDTypography>
                 </MDBox>
-                <MDBox pl={2} mt={2}>
-                  {/* <Button onClick={handleOpenNewProductModal} startIcon={<AddIcon />}>
-                    Add new product
-                  </Button> */}
-                  <Modal open={isOpenNewProductModal} onClose={handleCloseNewProductModal}>
-                    <MDBox style={style}>
-                      <Card>
-                        <CardHeader title="Create new product" />
-                        <CardContent>
-                          <Stack
-                            component="form"
-                            flexDirection="column"
-                            onSubmit={handleSubmitNewProductForm}
-                          >
-                            <FormControl sx={{ mb: 2 }}>
-                              <InputLabel htmlFor="name-new-product">Name</InputLabel>
-                              <Input
-                                id="name-new-product"
-                                fullWidth
-                                value={newProductInfo.name}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("name", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormControl sx={{ mb: 2 }}>
-                              <InputLabel htmlFor="price-new-product">Price</InputLabel>
-                              <Input
-                                id="price-new-product"
-                                fullWidth
-                                value={newProductInfo.price}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("price", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormControl sx={{ mb: 2 }}>
-                              <FormLabel id="type-new-product">Type</FormLabel>
-                              <RadioGroup
-                                aria-labelledby="type-new-product"
-                                row
-                                value={newProductInfo.type}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("type", e.target.value);
-                                }}
-                              >
-                                <FormControlLabel
-                                  value="vegetable"
-                                  control={<Radio />}
-                                  label="Vegetable"
-                                />
-                                <FormControlLabel value="fruit" control={<Radio />} label="Fruit" />
-                                <FormControlLabel value="meat" control={<Radio />} label="Meat" />
-                                <FormControlLabel
-                                  value="fastfood"
-                                  control={<Radio />}
-                                  label="Fastfood"
-                                />
-                                <FormControlLabel value="other" control={<Radio />} label="Other" />
-                              </RadioGroup>
-                            </FormControl>
-                            <FormControl sx={{ mb: 2 }}>
-                              <InputLabel htmlFor="img-url-new-product">Image url</InputLabel>
-                              <Input
-                                id="img-url-new-product"
-                                fullWidth
-                                value={newProductInfo.image}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("image", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormControl sx={{ mb: 2 }}>
-                              <TextField
-                                multiline
-                                minRows={3}
-                                id="summary-new-product"
-                                fullWidth
-                                placeholder="Summary"
-                                value={newProductInfo.summary}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("summary", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <FormControl sx={{ mb: 2 }}>
-                              <TextField
-                                multiline
-                                minRows={5}
-                                id="description-new-product"
-                                fullWidth
-                                placeholder="Description"
-                                value={newProductInfo.detailsDescription}
-                                onChange={(e) => {
-                                  handleChangeNewProductInfo("detailsDescription", e.target.value);
-                                }}
-                              />
-                            </FormControl>
-                            <Box>
-                              <MDButton
-                                variant="gradient"
-                                color="info"
-                                sx={{ mr: "8px" }}
-                                type="submit"
-                                startIcon={<DataSaverOnIcon />}
-                              >
-                                Create
-                              </MDButton>
-                              <MDButton
-                                variant="outlined"
-                                color="info"
-                                startIcon={<HighlightOffIcon />}
-                                onClick={handleCloseNewProductModal}
-                              >
-                                Cancel
-                              </MDButton>
-                            </Box>
-                          </Stack>
-                        </CardContent>
-                      </Card>
-                    </MDBox>
-                  </Modal>
-                </MDBox>
                 <MDBox pt={3}>
                   <DataTable
                     table={{ columns, rows }}
@@ -313,203 +119,25 @@ function Tables() {
                     entriesPerPage={false}
                     showTotalEntries={false}
                     noEndBorder
-                    // openEditProductModal={handleOpenEditProductModal}
                   />
                 </MDBox>
-                <Modal open={isOpenEditProductModal} onClose={handleCloseEditProductModal}>
-                  <MDBox style={style}>
-                    <Card>
-                      <CardHeader title="Edit product" />
-                      <CardContent>
-                        <Stack
-                          component="form"
-                          flexDirection="column"
-                          onSubmit={handleSubmitEditProductForm}
-                        >
-                          <FormControl sx={{ mb: 2 }}>
-                            <InputLabel htmlFor="name-new-product">Name</InputLabel>
-                            <Input
-                              id="name-new-product"
-                              fullWidth
-                              value={editProductInfo.name}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("name", e.target.value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormControl sx={{ mb: 2 }}>
-                            <InputLabel htmlFor="price-new-product">Price</InputLabel>
-                            <Input
-                              id="price-new-product"
-                              fullWidth
-                              value={editProductInfo.price}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("price", e.target.value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormControl sx={{ mb: 2 }}>
-                            <FormLabel id="type-new-product">Type</FormLabel>
-                            <RadioGroup
-                              aria-labelledby="type-new-product"
-                              row
-                              value={editProductInfo.type}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("type", e.target.value);
-                              }}
-                            >
-                              <FormControlLabel
-                                value="vegetable"
-                                control={<Radio />}
-                                label="Vegetable"
-                              />
-                              <FormControlLabel value="fruit" control={<Radio />} label="Fruit" />
-                              <FormControlLabel value="meat" control={<Radio />} label="Meat" />
-                              <FormControlLabel
-                                value="fastfood"
-                                control={<Radio />}
-                                label="Fastfood"
-                              />
-                              <FormControlLabel value="other" control={<Radio />} label="Other" />
-                            </RadioGroup>
-                          </FormControl>
-                          <FormControl sx={{ mb: 2 }}>
-                            <InputLabel htmlFor="img-url-new-product">Image url</InputLabel>
-                            <Input
-                              id="img-url-new-product"
-                              fullWidth
-                              value={editProductInfo.image}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("image", e.target.value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormControl sx={{ mb: 2 }}>
-                            <TextField
-                              multiline
-                              minRows={3}
-                              id="summary-new-product"
-                              fullWidth
-                              placeholder="Summary"
-                              value={editProductInfo.summary}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("summary", e.target.value);
-                              }}
-                            />
-                          </FormControl>
-                          <FormControl sx={{ mb: 2 }}>
-                            <TextField
-                              multiline
-                              minRows={5}
-                              id="description-new-product"
-                              fullWidth
-                              placeholder="Description"
-                              value={editProductInfo.detailsDescription}
-                              onChange={(e) => {
-                                handleChangeEditProductInfo("detailsDescription", e.target.value);
-                              }}
-                            />
-                          </FormControl>
-                          <Box>
-                            <MDButton
-                              variant="gradient"
-                              color="info"
-                              sx={{ mr: "8px" }}
-                              type="submit"
-                              startIcon={<SystemUpdateAltIcon />}
-                            >
-                              Update
-                            </MDButton>
-                            <MDButton
-                              variant="outlined"
-                              color="info"
-                              startIcon={<HighlightOffIcon />}
-                              onClick={handleCloseEditProductModal}
-                            >
-                              Cancel
-                            </MDButton>
-                          </Box>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </MDBox>
-                </Modal>
-                <Modal open={isOpenAddQuantityModal} onClose={handleCloseAddQuantityModal}>
-                  <MDBox style={style}>
-                    <Card>
-                      <CardHeader title="Add quantity" />
-                      <CardContent>
-                        <Stack
-                          component="form"
-                          flexDirection="column"
-                          onSubmit={handleSubmitAddQuantityProductForm}
-                        >
-                          <FormControl sx={{ mb: 2 }}>
-                            <InputLabel htmlFor="quantity-new-product">Quantity</InputLabel>
-                            <Input
-                              id="quantity-new-product"
-                              type="number"
-                              fullWidth
-                              value={quan}
-                              onChange={(e) => {
-                                changeQuantity(e.target.value);
-                              }}
-                            />
-                          </FormControl>
-
-                          <Box>
-                            <MDButton
-                              variant="gradient"
-                              color="info"
-                              sx={{ mr: "8px" }}
-                              type="submit"
-                              startIcon={<DataSaverOnIcon />}
-                            >
-                              Add
-                            </MDButton>
-                            <MDButton
-                              variant="outlined"
-                              color="info"
-                              startIcon={<HighlightOffIcon />}
-                              onClick={handleCloseAddQuantityModal}
-                            >
-                              Cancel
-                            </MDButton>
-                          </Box>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </MDBox>
-                </Modal>
-                <Modal open={isOpenDeleteProductModal} onClose={handleCloseDeleteProductModal}>
+                <Modal open={isOpenOrderDetails} onClose={handleCloseOrderDetailsModal}>
                   <MDBox style={style}>
                     <Card>
                       <CardHeader title="Are you sure to delete this product?" />
                       <CardContent>
-                        <Stack
-                          component="form"
-                          flexDirection="column"
-                          onSubmit={handleSubmitDeleteProductForm}
-                        >
+                        <Stack flexDirection="column">
                           <Typography variant="p">This action can not be undone</Typography>
-
+                          {console.log(selectedOrder)}
                           <Box>
                             <MDButton
                               variant="gradient"
-                              color="error"
-                              sx={{ mr: "8px" }}
-                              type="submit"
-                              startIcon={<DataSaverOnIcon />}
-                            >
-                              Delete
-                            </MDButton>
-                            <MDButton
-                              variant="outlined"
                               color="info"
-                              startIcon={<HighlightOffIcon />}
-                              onClick={handleCloseDeleteProductModal}
+                              sx={{ mr: "8px" }}
+                              startIcon={<DataSaverOnIcon />}
+                              onClick={handleCloseOrderDetailsModal}
                             >
-                              Cancel
+                              Ok
                             </MDButton>
                           </Box>
                         </Stack>

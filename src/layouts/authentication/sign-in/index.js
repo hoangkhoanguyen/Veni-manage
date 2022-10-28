@@ -20,7 +20,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
-import Switch from "@mui/material/Switch";
+// import Switch from "@mui/material/Switch";
 // import Grid from "@mui/material/Grid";
 // import MuiLink from "@mui/material/Link";
 
@@ -44,11 +44,13 @@ import { Stack } from "@mui/material";
 import userService from "service/userService";
 import { useDispatch, useSelector } from "react-redux";
 import { setLogin, setUserInfo } from "redux/reducers/userReducer";
+import validateService from "service/validateService";
+import { setOpenErrorSnackbar, setNotiContent, setNotiTitle } from "redux/reducers/uiReducer";
 
 function Basic() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [rememberMe, setRememberMe] = useState(false);
+  // const [rememberMe, setRememberMe] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -60,7 +62,7 @@ function Basic() {
     }
   }, []);
 
-  const handleSetRememberMe = () => setRememberMe(!rememberMe);
+  // const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
   const handleChangeUsername = (e) => {
     setUsername(e.target.value);
@@ -72,6 +74,11 @@ function Basic() {
 
   const handleSubmitLoginForm = async (e) => {
     e.preventDefault();
+    if (!validateService.isNormalLetterAndNumber(username)) {
+      dispatch(setOpenErrorSnackbar(true));
+      dispatch(setNotiContent("Please check"));
+      dispatch(setNotiTitle("Username must be only normal characters or numbers!"));
+    }
     const body = { username, password };
     const result = await userService.login(body);
     if (result?.errCode === 0) {
@@ -80,14 +87,13 @@ function Basic() {
       delete user.accessToken;
       delete user.refreshToken;
       dispatch(setUserInfo(user));
-      navigate("/dashboard");
+      navigate("/profile");
     }
     console.log(result);
   };
 
   return (
     <BasicLayout image={bgImage}>
-      {console.log("var", isLogin)}
       <Card>
         <MDBox
           variant="gradient"
@@ -113,6 +119,7 @@ function Basic() {
                 value={username}
                 onChange={handleChangeUsername}
                 fullWidth
+                required
               />
             </MDBox>
             <MDBox mb={2}>
@@ -122,9 +129,10 @@ function Basic() {
                 value={password}
                 onChange={handleChangePassword}
                 fullWidth
+                required
               />
             </MDBox>
-            <MDBox display="flex" alignItems="center" ml={-1}>
+            {/* <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
               <MDTypography
                 variant="button"
@@ -135,7 +143,7 @@ function Basic() {
               >
                 &nbsp;&nbsp;Remember me
               </MDTypography>
-            </MDBox>
+            </MDBox> */}
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth type="submit">
                 sign in

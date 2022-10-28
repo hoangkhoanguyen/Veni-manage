@@ -30,14 +30,27 @@ import MDSnackbar from "components/MDSnackbar";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "examples/Footer";
+// import { useDispatch } from "react-redux";
+// import { setOpenSnackbar, setNotiInfo } from "redux/reducers/uiReducer";
 
 function Notifications() {
+  // const distp = useDispatch();
   const [successSB, setSuccessSB] = useState(false);
   const [infoSB, setInfoSB] = useState(false);
   const [warningSB, setWarningSB] = useState(false);
   const [errorSB, setErrorSB] = useState(false);
 
-  const openSuccessSB = () => setSuccessSB(true);
+  const openSuccessSB = () => {
+    // distp(
+    //   setNotiInfo({
+    //     color: "info",
+    //     icon: "notifications",
+    //     title: "Well done!",
+    //     content: "You did well",
+    //   })
+    // );
+    // distp(setOpenSnackbar(true));
+  };
   const closeSuccessSB = () => setSuccessSB(false);
   const openInfoSB = () => setInfoSB(true);
   const closeInfoSB = () => setInfoSB(false);

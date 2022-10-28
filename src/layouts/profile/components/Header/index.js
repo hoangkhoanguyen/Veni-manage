@@ -101,9 +101,7 @@ function Header({ children }) {
           <Grid item>
             <MDBox height="100%" mt={0.5} lineHeight={1}>
               <MDTypography variant="h5" fontWeight="medium">
-                {userInfo?.firstName
-                  ? `${userInfo.firstName} ${userInfo.lastName}`
-                  : "Richard Davis"}
+                {userInfo?.firstName ? `${userInfo.firstName} ${userInfo.lastName}` : ""}
               </MDTypography>
               {/* <MDTypography variant="button" color="text" fontWeight="regular">
                 CEO / Co-Founder
